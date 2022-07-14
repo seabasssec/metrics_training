@@ -24,18 +24,22 @@ func float64MetricGenerator() float64 {
 }
 
 func getMetric(c chan bufferStorage) {
-	time.Sleep(pollInterval * time.Second)
-	metricsNameList := [29]string{"Alloc", "BuckHashSys", "Frees", "GCCPUFraction", "GCSys", "HeapAlloc", "HeapIdle", "HeapInuse", "HeapObjects", "HeapReleased", "HeapSys", "LastGC", "Lookups", "MCacheInuse", "MCacheSys", "MSpanInuse", "MSpanSys", "Mallocs", "NextGC", "NumForcedGC", "NumGC", "OtherSys", "PauseTotalNs", "StackInuse", "StackSys", "Sys", "TotalAlloc", "PollCount", "RandomValue"}
-	metricsTypeList := [29]string{"gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "counter", "gauge"}
-	for i := 0; i < 29; i++ {
-		var buff bufferStorage = bufferStorage{metricValue: float64MetricGenerator(), metricName: metricsNameList[i], typePseudo: metricsTypeList[i]}
-		c <- buff
+	for {
+		timer := time.NewTimer(pollInterval * time.Second)
+		<-timer.C
+		metricsNameList := [29]string{"Alloc", "BuckHashSys", "Frees", "GCCPUFraction", "GCSys", "HeapAlloc", "HeapIdle", "HeapInuse", "HeapObjects", "HeapReleased", "HeapSys", "LastGC", "Lookups", "MCacheInuse", "MCacheSys", "MSpanInuse", "MSpanSys", "Mallocs", "NextGC", "NumForcedGC", "NumGC", "OtherSys", "PauseTotalNs", "StackInuse", "StackSys", "Sys", "TotalAlloc", "PollCount", "RandomValue"}
+		metricsTypeList := [29]string{"gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "gauge", "counter", "gauge"}
+		for i := 0; i < 29; i++ {
+			var buff bufferStorage = bufferStorage{metricValue: float64MetricGenerator(), metricName: metricsNameList[i], typePseudo: metricsTypeList[i]}
+			c <- buff
+		}
 	}
 }
 
 func send(c chan bufferStorage) {
 	for {
-		time.Sleep(reportInterval * time.Second)
+		timer := time.NewTimer(reportInterval * time.Second)
+		<-timer.C
 		result, ok := <-c
 		if ok != true {
 			log.Fatal("ok isn't TRUE")
@@ -63,7 +67,5 @@ func send(c chan bufferStorage) {
 func main() {
 	c := make(chan bufferStorage)
 	go send(c)
-	for {
-		getMetric(c)
-	}
+	getMetric(c)
 }
